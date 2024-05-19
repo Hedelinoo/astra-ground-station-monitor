@@ -12,20 +12,13 @@ def initialize_db(db_path):
     CREATE TABLE IF NOT EXISTS packets (
         id INTEGER PRIMARY KEY,
         packet_id INTEGER NOT NULL,
-        temperature1 INTEGER,
-        temperature2 INTEGER,
-        temperature3 INTEGER,
-        temperature4 INTEGER,
-        temperature5 INTEGER,
-        temperature6 INTEGER,
-        temperature7 INTEGER,
-        temperature8 INTEGER,
-        temperature9 INTEGER,
-        temperature10 INTEGER,
-        temperature11 INTEGER,
-        temperature12 INTEGER,
-        temperature13 INTEGER,
-        temperature14 INTEGER,
+        byte1 INTEGER,
+        byte2 INTEGER,
+        byte3 INTEGER,
+        byte4 INTEGER,
+        byte5 INTEGER,
+        byte6 INTEGER,
+        byte7 INTEGER,
         sentReceived STRING NOT NULL
     );''')
     
@@ -34,25 +27,21 @@ def initialize_db(db_path):
 def handle_data_packet(packet: str, cursor):
     data = packet.split(';')[1:]
     packet_id = int(data[0])
-    packet_temperatures = []
-    
+    data_bytes = []
+
     for d in data[1:]:
         if not d.isnumeric():
             break
-        packet_temperatures.append(int(d) - 127)
+        data_bytes.append(int(d))
 
-    temperature_values = [None] * 14
-    if packet_id == 4:
-        temperature_values[:7] = packet_temperatures[:7]
-    elif packet_id == 5:
-        temperature_values[7:] = packet_temperatures[:7]
-    elif packet_id == 6:
-        temperature_values[14-1] = packet_temperatures[0]
+    # Ensure the list has exactly 7 elements
+    while len(data_bytes) < 7:
+        data_bytes.append(None)
     
     cursor.execute('''
-    INSERT INTO packets (packet_id, temperature1, temperature2, temperature3, temperature4, temperature5, temperature6, temperature7, temperature8, temperature9, temperature10, temperature11, temperature12, temperature13, temperature14, sentReceived)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-    ''', (packet_id, *temperature_values, 'received'))
+    INSERT INTO packets (packet_id, byte1, byte2, byte3, byte4, byte5, byte6, byte7, sentReceived)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+    ''', (packet_id, *data_bytes, 'received'))
     cursor.connection.commit()
 
 def read_file_and_write_to_db(file_path, cursor):
