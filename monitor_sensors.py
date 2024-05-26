@@ -5,6 +5,16 @@ import os
 
 temperatureValues: list[int| None] = [None] * 15 
 
+import time
+
+start_time = time.time()
+
+def millis_since_start():
+    current_time = time.time()
+    millis = (current_time - start_time) * 1000
+    return str(int(millis))
+
+
 def clear_console():
     os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -45,7 +55,7 @@ def handle_serial_packet(packet: str, output):
     global temperatureValues
     with open(output, 'a+') as outfile:
         handle_data_packet(packet, temperatureValues)
-        outfile.write(f"{packet.strip()}\n")
+        outfile.write(f"{millis_since_start()+ ";" + packet.strip()}\n")
         
 def receive_serial_packets(port, output, on_receive_packet):
     ser = serial.Serial(
